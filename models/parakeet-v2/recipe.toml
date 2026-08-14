@@ -1,0 +1,24 @@
+# Recipe for parakeet-v2 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["parakeet-tdt-0.6b-v2"]
+card = "README.md"
+hf_repo = "rahulrachuri/parakeet-tdt-0.6b-v2-coreai"
+source_hf_id = "nvidia/parakeet-tdt-0.6b-v2"
+status = "verified"
+steps = [
+  { script = "parakeet/export_encoder.py", args = ["--hf-id", "rahulrachuri/parakeet-tdt-0.6b-v2", "--oracle", "oracle_v2_30s.npz", "--artifacts", "artifacts_v2"], bundle = "parakeet_encoder_float16_L2885.aimodel" },
+  { script = "parakeet/export_decoder.py", args = ["--hf-id", "rahulrachuri/parakeet-tdt-0.6b-v2", "--dtype", "float32", "--oracle", "oracle_v2_30s.npz", "--artifacts", "artifacts_v2"], bundle = "parakeet_predict_float32.aimodel" },
+]
+notes = [
+  "Same two exporters as the v3 recipe; --hf-id is the only knob that changes the checkpoint.",
+  "NVIDIA publishes v2 as a .nemo only, so --hf-id points at an HF-layout conversion rather than",
+  "an NVIDIA repo. That conversion needed two fixes to transformers' convert_nemo_to_hf.py,",
+  "because v2's vocab has 1024 labels and carries no <pad> where v3's does; the patch ships",
+  "beside the bundles as convert_nemo_to_hf_v2.patch.",
+  "The oracle differs from v3's (oracle_v2_30s.npz, vocab 1025 / blank 1024), so generate it",
+  "first with gen_oracle.py --hf-id <the same id> --seconds 16 --pad-seconds 14.0.",
+  "The encoder takes no length flag — L2885 (30 s of frames) is baked into the graph. One",
+  "decoder run emits both published float32 graphs (predict + joint).",
+]
